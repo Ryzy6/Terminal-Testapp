@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS Terminal v2.0</title>
+    <title>POS Terminal v2.1</title>
     <style>
         body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0c1017; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; transition: background 0.4s ease; }
         
@@ -12,7 +12,7 @@
         .setup-title { font-size: 16px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
         .amount-display { font-size: 54px; font-weight: bold; margin-bottom: 30px; color: #58a6ff; }
         
-        /* Klávesnice jako na terminálu */
+        /* Klávesnice */
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 80%; max-width: 280px; }
         .key { background: #21262d; border: 1px solid #30363d; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; cursor: pointer; transition: active 0.1s; -webkit-tap-highlight-color: transparent; }
         .key:active { background: #30363d; }
@@ -34,7 +34,9 @@
         
         /* Spodní branding loga karet */
         .logos { display: flex; gap: 20px; align-items: center; margin-bottom: 20px; opacity: 0.6; }
-        .logo-img { height: 22px; filter: grayscale(30%); }
+        .logo-text { font-size: 20px; font-weight: bold; font-style: italic; letter-spacing: -1px; }
+        .visa-text { color: #005792; }
+        .mc-text { color: #eb001b; }
 
         /* Stavy po schválení platby */
         .success-bg { background: #112b1a !important; }
@@ -84,10 +86,10 @@
 
         <div id="statusLabel" class="status-text">Prosím, přiložte kartu<br>nebo mobilní telefon</div>
 
-        <!-- Oficiální loga pro autentický vzhled -->
+        <!-- Čistě kódovaná loga, aby se načítala okamžitě a bez internetu -->
         <div class="logos">
-            <img class="logo-img" src="https://companieslogo.com" alt="Visa">
-            <img class="logo-img" src="https://wikipedia.org" alt="Mastercard">
+            <span class="logo-text visa-text">VISA</span>
+            <span class="logo-text mc-text">mastercard</span>
         </div>
     </div>
 
@@ -110,10 +112,8 @@
         function confirmAmount() {
             if (currentAmount === "" || currentAmount === "0") return;
             
-            // Naformátuje zadanou částku na měnu (např. 150 Kč)
             document.getElementById("finalAmount").innerText = parseInt(currentAmount).toLocaleString('cs-CZ') + ",00 Kč";
             
-            // Přepne obrazovky
             document.getElementById("setupScreen").style.display = "none";
             document.getElementById("terminalScreen").style.display = "flex";
         }
@@ -125,7 +125,7 @@
             oscillator.connect(gainNode);
             gainNode.connect(audioCtx.destination);
             oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(1450, audioCtx.currentTime); // Přesný tón Verifone terminálů
+            oscillator.frequency.setValueAtTime(1450, audioCtx.currentTime); 
             gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.18);
@@ -138,7 +138,6 @@
 
             document.getElementById("statusLabel").innerHTML = "Čtení karty...<br>Nevzdalujte kartu";
             
-            // Simulace zpracování (1.2 vteřiny)
             setTimeout(() => {
                 pipnuti();
                 document.body.classList.add("success-bg");
@@ -146,7 +145,6 @@
                 document.getElementById("statusLabel").innerHTML = "PLATBA SCHVÁLENA<br>Děkujeme";
                 document.getElementById("termIcon").innerText = "✓";
                 
-                // Zastaví vlny a zbarví je do zelena
                 document.getElementById("w1").classList.add("success-wave");
                 document.getElementById("w2").style.display = "none";
                 document.getElementById("w3").style.display = "none";
