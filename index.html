@@ -1,93 +1,152 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS Terminal v3.1</title>
+    <title>SmartPOS Terminal Pro</title>
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0e14; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; transition: background 0.3s ease; }
+        body { margin: 0; font-family: 'Roboto', -apple-system, sans-serif; background: #1a1a24; color: #ffffff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; user-select: none; }
         
-        /* Obrazovka 1: Zadávání částky */
-        #setupScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
-        .setup-title { font-size: 15px; color: #8b949e; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; font-weight: 500; }
-        .amount-display { font-size: 56px; font-weight: bold; margin-bottom: 35px; color: #58a6ff; font-variant-numeric: tabular-nums; }
-        
-        /* Klávesnice */
-        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 85%; max-width: 290px; }
-        .key { background: #161b22; border: 1px solid #30363d; border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600; cursor: pointer; transition: background 0.1s; -webkit-tap-highlight-color: transparent; }
-        .key:active { background: #30363d; }
-        .key.btn-ok { background: #238636; border-color: #2ea44f; border-radius: 14px; width: auto; grid-column: span 3; height: 58px; margin-top: 10px; font-size: 18px; letter-spacing: 0.5px; }
-        .key.btn-ok:active { background: #2ea44f; }
-        
-        /* Obrazovka 2: Samotný Terminál */
-        #terminalScreen { display: none; flex-direction: column; align-items: center; justify-content: space-between; width: 100%; height: 85vh; box-sizing: border-box; padding: 30px 20px; }
-        .terminal-amount { font-size: 52px; font-weight: 800; letter-spacing: -1px; margin-top: 15px; font-variant-numeric: tabular-nums; }
-        
-        /* Bezdotyková animace vln */
-        .wave-container { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
-        .wave-icon { font-size: 65px; z-index: 2; color: #58a6ff; transition: color 0.3s; }
-        .wave { position: absolute; border: 4px solid #58a6ff; border-radius: 50%; width: 100%; height: 100%; animation: pulse 2s infinite ease-out; opacity: 0; }
-        .wave2 { animation-delay: 0.6s; }
-        .wave3 { animation-delay: 1.2s; }
-        
-        .status-text { font-size: 19px; font-weight: 600; text-align: center; color: #c9d1d9; min-height: 55px; line-height: 1.5; }
-        
-        /* Spodní autentické VISA logo (Vektorové SVG uvnitř kódu) */
-        .logos { display: flex; justify-content: center; width: 100%; margin-bottom: 10px; }
-        .visa-svg { height: 28px; fill: #ffffff; opacity: 0.9; }
+        /* Horní systémová lišta terminálu */
+        .status-bar { display: flex; justify-content: space-between; padding: 6px 16px; background: #111116; font-size: 12px; color: #a0a0a5; font-weight: 500; border-bottom: 1px solid #252530; }
+        .status-left { display: flex; gap: 8px; }
 
-        /* Stavy po schválení platby */
-        .success-bg { background: #0e2a18 !important; }
-        .success-text { color: #3fb950 !important; }
-        .success-wave { border-color: #3fb950 !important; animation: none !important; opacity: 1 !important; transform: scale(1.1); }
+        /* Hlavní kontejner obrazovek */
+        .screen { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 24px 16px; box-sizing: border-box; width: 100%; height: 100%; }
+        
+        /* OBRAZOVKA 1: ZADÁVÁNÍ ČÁSTKY */
+        #setupScreen { display: flex; }
+        .terminal-header { text-align: center; margin-top: 10px; }
+        .merchant-name { font-size: 14px; color: #8a8a93; text-transform: uppercase; letter-spacing: 1px; }
+        .pos-action { font-size: 18px; font-weight: bold; margin-top: 4px; color: #ffffff; }
+        
+        .amount-box { font-size: 52px; font-weight: 700; color: #ffffff; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+        
+        /* Realistická POS Klávesnice */
+        .pos-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 320px; margin-bottom: 10px; }
+        .pos-key { background: #2a2a35; border: 1px solid #3a3a45; border-radius: 8px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .pos-key:active { background: #3a3a45; }
+        
+        /* Barebná funkční tlačítka */
+        .key-clear { background: #b91c1c; border-color: #991b1b; font-size: 14px; text-transform: uppercase; color: white; }
+        .key-clear:active { background: #991b1b; }
+        .key-corr { background: #d97706; border-color: #b45309; font-size: 14px; text-transform: uppercase; color: white; }
+        .key-corr:active { background: #b45309; }
+        .key-enter { background: #15803d; border-color: #166534; font-size: 14px; text-transform: uppercase; color: white; grid-column: span 3; height: 54px; margin-top: 4px; }
+        .key-enter:active { background: #166534; }
 
-        @keyframes pulse {
+        /* OBRAZOVKA 2: PLATEBNÍ MÓD */
+        #terminalScreen { display: none; background: #ffffff; color: #1a1a1a; text-align: center; }
+        #terminalScreen.processing-state { background: #ffffff; color: #1a1a1a; }
+        #terminalScreen.success-state { background: #1e4620; color: #ffffff; }
+        
+        .pay-title { font-size: 16px; font-weight: bold; color: #666666; text-transform: uppercase; margin-top: 10px; }
+        .success-state .pay-title { color: #a3e635; }
+        
+        .pay-amount { font-size: 56px; font-weight: 800; color: #1a1a1a; margin: 15px 0; font-variant-numeric: tabular-nums; }
+        .success-state .pay-amount { color: #ffffff; }
+
+        /* Bezkontaktní symbol a načítání */
+        .nfc-animation-box { width: 120px; height: 120px; display: flex; align-items: center; justify-content: center; margin: 20px 0; position: relative; }
+        .nfc-icon { font-size: 60px; color: #005792; z-index: 2; transition: transform 0.2s; }
+        .success-state .nfc-icon { color: #ffffff; transform: scale(1.1); }
+        
+        /* Pulzující bezkontaktní vlny */
+        .nfc-wave { position: absolute; border: 3px solid #005792; border-radius: 50%; width: 100%; height: 100%; animation: nfcPulse 1.8s infinite ease-out; opacity: 0; }
+        .wave-d2 { animation-delay: 0.6s; }
+        .processing-state .nfc-wave, .success-state .nfc-wave { display: none; }
+
+        /* Kolečko načítání (bude se točit při komunikaci s bankou) */
+        .spinner { display: none; width: 60px; height: 60px; border: 6px solid #f3f3f3; border-top: 6px solid #005792; border-radius: 50%; animation: spin 1s linear infinite; }
+        .processing-state .spinner { display: block; }
+        .processing-state .nfc-icon { display: none; }
+
+        .pos-status-text { font-size: 20px; font-weight: bold; color: #2d3748; line-height: 1.4; min-height: 60px; }
+        .success-state .pos-status-text { color: #ffffff; }
+        
+        .receipt-info { display: none; font-size: 12px; color: #cbd5e1; margin-top: 5px; line-height: 1.6; font-family: monospace; }
+        .success-state .receipt-info { display: block; }
+
+        /* Oficiální věrné VISA logo ve spodní části */
+        .footer-branding { width: 100%; display: flex; justify-content: center; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-bottom: 5px; }
+        .success-state .footer-branding { border-top-color: #2e6933; }
+        .visa-brand { height: 26px; }
+
+        @keyframes nfcPulse {
             0% { transform: scale(0.6); opacity: 0; }
-            50% { opacity: 0.35; }
-            100% { transform: scale(1.35); opacity: 0; }
+            40% { opacity: 0.4; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. OBRAZOVKA: ZADÁNÍ ČÁSTKY -->
-    <div id="setupScreen">
-        <div class="setup-title">Částka k úhradě</div>
-        <div class="amount-display"><span id="typedAmount">0</span> Kč</div>
-        <div class="keypad">
-            <div class="key" onclick="pressNum(1)">1</div>
-            <div class="key" onclick="pressNum(2)">2</div>
-            <div class="key" onclick="pressNum(3)">3</div>
-            <div class="key" onclick="pressNum(4)">4</div>
-            <div class="key" onclick="pressNum(5)">5</div>
-            <div class="key" onclick="pressNum(6)">6</div>
-            <div class="key" onclick="pressNum(7)">7</div>
-            <div class="key" onclick="pressNum(8)">8</div>
-            <div class="key" onclick="pressNum(9)">9</div>
-            <div class="key" style="font-size:15px; border-radius:12px; background: #21262d;" onclick="pressClear()">Smazat</div>
-            <div class="key" onclick="pressNum(0)">0</div>
-            <div class="key" style="font-size:15px; border-radius:12px; background: #21262d;" onclick="pressNum('00')">00</div>
-            <div class="key btn-ok" onclick="confirmAmount()">POTVRDIT</div>
+    <!-- SOUČÁST KAŽDÉ OBRAZOVKY: HORNÍ SYSTÉMOVÁ LIŠTA -->
+    <div class="status-bar">
+        <div class="status-left">
+            <span>📶 Wi-Fi</span>
+            <span>🔋 100%</span>
+        </div>
+        <div>PRODEJ</div>
+        <div id="liveClock">12:00</div>
+    </div>
+
+    <!-- 1. OBRAZOVKA: ZADÁNÍ ČÁSTKY OBCHODNÍKEM -->
+    <div id="setupScreen" class="screen">
+        <div class="terminal-header">
+            <div class="merchant-name">PLATEBNÍ TERMINÁL</div>
+            <div class="pos-action">Zadejte částku</div>
+        </div>
+        
+        <div class="amount-box"><span id="typedAmount">0</span>,00 Kč</div>
+        
+        <div class="pos-keypad">
+            <div class="pos-key" onclick="pressNum(1)">1</div>
+            <div class="pos-key" onclick="pressNum(2)">2</div>
+            <div class="pos-key" onclick="pressNum(3)">3</div>
+            <div class="pos-key" onclick="pressNum(4)">4</div>
+            <div class="pos-key" onclick="pressNum(5)">5</div>
+            <div class="pos-key" onclick="pressNum(6)">6</div>
+            <div class="pos-key" onclick="pressNum(7)">7</div>
+            <div class="pos-key" onclick="pressNum(8)">8</div>
+            <div class="pos-key" onclick="pressNum(9)">9</div>
+            <div class="pos-key key-clear" onclick="pressClear()">Clear</div>
+            <div class="pos-key" onclick="pressNum(0)">0</div>
+            <div class="pos-key key-corr" onclick="pressCorr()">Corr</div>
+            <div class="pos-key key-enter" onclick="confirmAmount()">Potvrdit (Enter)</div>
         </div>
     </div>
 
-    <!-- 2. OBRAZOVKA: TERMINÁL ČEKAJÍCÍ NA PLATBU -->
-    <div id="terminalScreen" onclick="triggerPayment()">
-        <div id="finalAmount" class="terminal-amount">0,00 Kč</div>
+    <!-- 2. OBRAZOVKA: SAMOTNÝ DIALOG PRO ZÁKAZNÍKA (KLIKNUTÍM SE SPUSTÍ PROCES) -->
+    <div id="terminalScreen" class="screen" onclick="triggerPayment()">
+        <div id="payTitle" class="pay-title">ČÁSTKA K ÚHRADĚ</div>
+        <div id="finalAmount" class="pay-amount">0,00 Kč</div>
         
-        <div class="wave-container">
-            <div id="w1" class="wave"></div>
-            <div id="w2" class="wave wave2"></div>
-            <div id="w3" class="wave wave3"></div>
-            <div id="termIcon" class="wave-icon">📶</div>
+        <div class="nfc-animation-box">
+            <div class="nfc-wave"></div>
+            <div class="nfc-wave wave-d2"></div>
+            <div id="spinner" class="spinner"></div>
+            <div id="termIcon" class="nfc-icon">📟</div>
         </div>
 
-        <div id="statusLabel" class="status-text">Prosím, přiložte kartu<br>nebo mobilní zařízení</div>
+        <div id="statusLabel" class="pos-status-text">Prosím, přiložte kartu<br>nebo mobilní telefon</div>
 
-        <!-- Oficiální VISA vektorové logo -->
-        <div class="logos">
-            <svg class="visa-svg" viewBox="0 0 24 8" xmlns="http://w3.org">
-                <path d="M3.7 0L2.4 8H0L1.3 0h2.4zM9.4 0c-.8 0-1.5.4-1.8 1.1L5.3 8h2.5c.2-.5.5-.9.5-.9h3.1c.1.4.2.9.2.9h2.2L12 0H9.4zm.8 5.4H8.7l.8-2.1.7 2.1zM21.1 0l-2.2 5.5L17.8 1C17.6.4 17 0 16.3 0H12l-.1.4c.9.2 1.7.5 2.2.9l2 6.7h2.5L24 0h-2.9zM7.3 2.5C7 1.2 5.6.8 4.6.8H2.2L1.8 2.1c.4-.1.9-.2 1.4-.2.8 0 1.3.3 1.3.8 0 .6-.7.9-1.3 1.2C2.4 4.3 1.8 4.9 1.8 5.7c0 1.2 1.4 1.7 2.6 1.7h2.5l.4-1.3c-.5.1-1.1.2-1.6.2-.8 0-1.4-.3-1.4-.8 0-.6.7-1 1.4-1.3.8-.3 1.6-.9 1.6-1.7z"/>
+        <div id="receipt" class="receipt-info">
+            POŘADÍ: #0514 &nbsp;&nbsp; KÓD AUTORIZACE: <span id="authCode">642819</span><br>
+            AID: A0000000031010 &nbsp;&nbsp; PRODEJ SCHVÁLEN
+        </div>
+
+        <!-- Oficiální barevné VISA logo -->
+        <div class="footer-branding">
+            <svg class="visa-brand" viewBox="0 0 24 8" xmlns="http://w3.org">
+                <path fill="#1434CB" d="M3.7 0L2.4 8H0L1.3 0h2.4z"/>
+                <path fill="#F7B600" d="M7.3 2.5C7 1.2 5.6.8 4.6.8H2.2L1.8 2.1c.4-.1.9-.2 1.4-.2.8 0 1.3.3 1.3.8 0 .6-.7.9-1.3 1.2C2.4 4.3 1.8 4.9 1.8 5.7c0 1.2 1.4 1.7 2.6 1.7h2.5l.4-1.3c-.5.1-1.1.2-1.6.2-.8 0-1.4-.3-1.4-.8 0-.6.7-1 1.4-1.3.8-.3 1.6-.9 1.6-1.7z"/>
+                <path fill="#1434CB" d="M9.4 0c-.8 0-1.5.4-1.8 1.1L5.3 8h2.5c.2-.5.5-.9.5-.9h3.1c.1.4.2.9.2.9h2.2L12 0H9.4zm.8 5.4H8.7l.8-2.1.7 2.1zM21.1 0l-2.2 5.5L17.8 1C17.6.4 17 0 16.3 0H12l-.1.4c.9.2 1.7.5 2.2.9l2 6.7h2.5L24 0h-2.9z"/>
             </svg>
         </div>
     </div>
@@ -95,9 +154,15 @@
     <script>
         let currentAmount = "";
 
+        // Reálný čas na horní liště
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById("liveClock").innerText = now.toLocaleTimeString('cs-CZ', {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+
         function pressNum(num) {
-            if (currentAmount === "" && (num === 0 || num === '00')) return;
-            if (currentAmount.length < 7) {
+            if (currentAmount === "" && num === 0) return;
+            if (currentAmount.length < 6) {
                 currentAmount += num;
                 document.getElementById("typedAmount").innerText = parseInt(currentAmount).toLocaleString('cs-CZ');
             }
@@ -108,61 +173,25 @@
             document.getElementById("typedAmount").innerText = "0";
         }
 
+        function pressCorr() {
+            if (currentAmount.length > 0) {
+                currentAmount = currentAmount.slice(0, -1);
+                document.getElementById("typedAmount").innerText = currentAmount.length === 0 ? "0" : parseInt(currentAmount).toLocaleString('cs-CZ');
+            }
+        }
+
         function confirmAmount() {
             if (currentAmount === "" || currentAmount === "0") return;
             
-            document.getElementById("finalAmount").innerText = parseInt(currentAmount).toLocaleString('cs-CZ') + ",00 Kč";
-            
-            document.getElementById("setupScreen").style.display = "none";
-            document.getElementById("terminalScreen").style.display = "flex";
-        }
-
-        function hrajTon(frekvence, delka, casOdstartovani) {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(frekvence, audioCtx.currentTime + casOdstartovani);
-            
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime + casOdstartovani);
-            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + casOdstartovani + 0.02);
-            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime + casOdstartovani + delka - 0.02);
-            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + casOdstartovani + delka);
-            
-            oscillator.start(audioCtx.currentTime + casOdstartovani);
-            oscillator.stop(audioCtx.currentTime + casOdstartovani + delka);
-        }
-
-        let isPaid = false;
-        function triggerPayment() {
-            if (isPaid) return;
-            isPaid = true;
-
-            document.getElementById("statusLabel").innerHTML = "Čtení karty...<br>Nevzdalujte kartu";
-            
-            // Reálná sekvence zvuků: Dvojité pípnutí na startu
-            hrajTon(1200, 0.05, 0);       
-            hrajTon(1200, 0.05, 0.08);    
-            
-            // Finální dlouhé schválení
-            setTimeout(() => {
-                hrajTon(1450, 0.22, 0);   
-                
-                document.body.classList.add("success-bg");
-                document.getElementById("statusLabel").classList.add("success-text");
-                document.getElementById("statusLabel").innerHTML = "PLATBA SCHVÁLENA<br>Děkujeme";
-                document.getElementById("termIcon").innerText = "✓";
-                document.getElementById("termIcon").style.color = "#3fb950";
-                
-                document.getElementById("w1").classList.add("success-wave");
-                document.getElementById("w2").style.display = "none";
-                document.getElementById("w3").style.display = "none";
-            }, 1100); 
-        }
-    </script>
-</body>
-</html>
+document.getElementById("finalAmount").innerText = parseInt(currentAmount).toLocaleString('cs-CZ') + ",00 Kč";document.getElementById("setupScreen").style.display = "none";document.getElementById("terminalScreen").style.display = "flex";document.getElementById("termIcon").innerText = "📶";}function hrajTon(frekvence, delka, casOdstartovani) {const audioCtx = new (window.AudioContext || window.webkitAudioContext)();const oscillator = audioCtx.createOscillator();const gainNode = audioCtx.createGain();oscillator.connect(gainNode);gainNode.connect(audioCtx.destination);oscillator.type = 'sine';oscillator.frequency.setValueAtTime(frekvence, audioCtx.currentTime + casOdstartovani);gainNode.gain.setValueAtTime(0, audioCtx.currentTime + casOdstartovani);gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + casOdstartovani + 0.01);gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime + casOdstartovani + delka - 0.01);gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + casOdstartovani + delka);oscillator.start(audioCtx.currentTime + casOdstartovani);oscillator.stop(audioCtx.currentTime + casOdstartovani + delka);}let currentStage = 0;
+        0 = čeká na kartu, 
+        1 = čtení/spojování, 
+        2 = schválenofunction triggerPayment() {if (currentStage !== 0) return;currentStage = 1;
+                                                //FÁZE 1: Zákazník přiložil kartu -> Dvojité pípnutí 
+                                                termináludocument.getElementById("statusLabel").innerHTML = "ČTENÍ KARTY...NEVZDALUJTE KARTU";hrajTon(1300, 0.06, 0);hrajTon(1300, 0.06, 0.09);
+                                                // FÁZE 2: Po načtení karty probíhá on-line ověření v bance 
+                                                (1.5s)setTimeout(() => {document.getElementById("terminalScreen").classList.add("processing-state");document.getElementById("statusLabel").innerHTML = "ZPRACOVÁVÁNÍ...KOMUNIKACE S BANKOU";
+                                                                        // FÁZE 3: Banka transakci schválí (za další 2s)
+                                                                        setTimeout(() => {currentStage = 2;document.getElementById("authCode").innerText = Math.floor(100000 + Math.random() * 900000);
+                                                                                          // Dlouhý tón úspěšného schválení
+                                                                                          hrajTon(1480, 0.25, 0);document.getElementById("terminalScreen").classList.remove("processing-state");document.getElementById("terminalScreen").classList.add("success-state");document.getElementById("payTitle").innerText = "TRANSAKCE SCHVÁLENA";document.getElementById("statusLabel").innerHTML = "DĚKUJEME";document.getElementById("termIcon").innerText = "✓";}, 2000);}, 1200);}
