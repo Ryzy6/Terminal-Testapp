@@ -1,0 +1,45 @@
+html<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminál</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #1a252f; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; transition: background 0.5s; }
+        .icon { font-size: 80px; margin-bottom: 20px; }
+        .status { font-size: 24px; font-weight: bold; text-align: center; padding: 0 20px; }
+        .success { background: #2ecc71 !important; }
+    </style>
+</head>
+<body>
+
+    <div id="icon" class="icon">💳</div>
+    <div id="status" class="status">Přiložte kartu nebo telefon</div>
+
+    <script>
+        // Funkce, která simuluje úspěšnou platbu při detekci NFC
+        async function spustitNFC() {
+            try {
+                // Použijeme WebNFC API dostupné v mobilních prohlížečích/aplikacích
+                const ndef = new NDEFReader();
+                await ndef.scan();
+                
+                ndef.addEventListener("reading", () => {
+                    document.getElementById("status").innerText = "Zpracovávám platbu...";
+                    
+                    setTimeout(() => {
+                        document.body.classList.add("success");
+                        document.getElementById("icon").innerText = "✓";
+                        document.getElementById("status").innerText = "Platba schválena!";
+                    }, 1500);
+                });
+            } catch (error) {
+                document.getElementById("status").innerText = "NFC není aktivní nebo podporováno.";
+            }
+        }
+
+        // Spustit skenování ihned po načtení stránky
+        window.onload = spustitNFC;
+    </script>
+</body>
+</html>
