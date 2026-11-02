@@ -1,167 +1,758 @@
 <!DOCTYPE html>
-<html lang="cs">
+<html lang="cs" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>POS Terminal v3.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Platební Terminál Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
     <style>
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0b0e14; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; transition: background 0.3s ease; }
-        
-        /* Obrazovka 1: Zadávání částky */
-        #setupScreen { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
-        .setup-title { font-size: 15px; color: #8b949e; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; font-weight: 500; }
-        .amount-display { font-size: 56px; font-weight: bold; margin-bottom: 35px; color: #58a6ff; font-variant-numeric: tabular-nums; }
-        
-        /* Klávesnice */
-        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 85%; max-width: 290px; }
-        .key { background: #161b22; border: 1px solid #30363d; border-radius: 50%; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 600; cursor: pointer; transition: background 0.1s; -webkit-tap-highlight-color: transparent; }
-        .key:active { background: #30363d; }
-        .key.btn-ok { background: #238636; border-color: #2ea44f; border-radius: 14px; width: auto; grid-column: span 3; height: 58px; margin-top: 10px; font-size: 18px; letter-spacing: 0.5px; }
-        .key.btn-ok:active { background: #2ea44f; }
-        
-        /* Obrazovka 2: Samotný Terminál */
-        #terminalScreen { display: none; flex-direction: column; align-items: center; justify-content: space-between; width: 100%; height: 85vh; box-sizing: border-box; padding: 30px 20px; }
-        .terminal-amount { font-size: 52px; font-weight: 800; letter-spacing: -1px; margin-top: 15px; font-variant-numeric: tabular-nums; }
-        
-        /* Bezdotyková animace vln */
-        .wave-container { position: relative; width: 130px; height: 130px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
-        .wave-icon { font-size: 65px; z-index: 2; color: #58a6ff; transition: color 0.3s; }
-        .wave { position: absolute; border: 4px solid #58a6ff; border-radius: 50%; width: 100%; height: 100%; animation: pulse 2s infinite ease-out; opacity: 0; }
-        .wave2 { animation-delay: 0.6s; }
-        .wave3 { animation-delay: 1.2s; }
-        
-        .status-text { font-size: 19px; font-weight: 600; text-align: center; color: #c9d1d9; min-height: 55px; line-height: 1.5; }
-        
-        /* Spodní autentické VISA logo (Vektorové SVG uvnitř kódu) */
-        .logos { display: flex; justify-content: center; width: 100%; margin-bottom: 10px; }
-        .visa-svg { height: 28px; fill: #ffffff; opacity: 0.9; }
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
 
-        /* Stavy po schválení platby */
-        .success-bg { background: #0e2a18 !important; }
-        .success-text { color: #3fb950 !important; }
-        .success-wave { border-color: #3fb950 !important; animation: none !important; opacity: 1 !important; transform: scale(1.1); }
+        .font-mono-tech {
+            font-family: 'Share Tech Mono', monospace;
+        }
 
-        @keyframes pulse {
-            0% { transform: scale(0.6); opacity: 0; }
-            50% { opacity: 0.35; }
-            100% { transform: scale(1.35); opacity: 0; }
+        .font-display {
+            font-family: 'Chakra Petch', sans-serif;
+        }
+
+        /* Terminal 3D Shadow & Body Gradient */
+        .pos-terminal-shadow {
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.75),
+                0 18px 36px -18px rgba(0, 0, 0, 0.9),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Screen Glass Effect */
+        .pos-screen-glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.15) 100%);
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        /* Physical Buttons Styling */
+        .btn-key {
+            background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+            box-shadow: 
+                0 4px 0 #111827,
+                0 5px 10px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+            transition: all 0.05s ease;
+        }
+
+        .btn-key:active {
+            transform: translateY(3px);
+            box-shadow: 
+                0 1px 0 #111827,
+                0 2px 4px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 0 #991b1b, 0 5px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .btn-cancel:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #991b1b, 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .btn-clear {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 4px 0 #92400e, 0 5px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .btn-clear:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #92400e, 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .btn-enter {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 0 #065f46, 0 5px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .btn-enter:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #065f46, 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* LED Lights Glow */
+        .led-off {
+            background-color: #374151;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .led-green {
+            background-color: #10b981;
+            box-shadow: 0 0 10px #10b981, inset 0 1px 2px rgba(255,255,255,0.5);
+        }
+        .led-amber {
+            background-color: #f59e0b;
+            box-shadow: 0 0 10px #f59e0b, inset 0 1px 2px rgba(255,255,255,0.5);
+        }
+        .led-red {
+            background-color: #ef4444;
+            box-shadow: 0 0 10px #ef4444, inset 0 1px 2px rgba(255,255,255,0.5);
+        }
+
+        /* Animated Thermal Paper Receipt */
+        #receipt-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 1.8s cubic-bezier(0, 1, 0, 1);
+        }
+
+        #receipt-container.printing {
+            max-height: 450px;
+            transition: max-height 2.5s ease-in-out;
+        }
+
+        .receipt-edge {
+            background: radial-gradient(circle, transparent, transparent 50%, #ffffff 50%, #ffffff 100%);
+            background-size: 10px 10px;
+        }
+
+        /* Credit Card Hover & Tap Animation */
+        .card-anim {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .card-anim:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+        .card-anim.tapping {
+            transform: translateY(-160px) rotate(-10deg) scale(0.95) !important;
+        }
+
+        /* Keypad pulse animation on tap prompt */
+        @keyframes tapPulse {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+        .pulse-nfc {
+            animation: tapPulse 1.5s infinite ease-in-out;
         }
     </style>
 </head>
-<body>
+<body class="h-full min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-between overflow-x-hidden relative">
 
-    <!-- 1. OBRAZOVKA: ZADÁNÍ ČÁSTKY -->
-    <div id="setupScreen">
-        <div class="setup-title">Částka k úhradě</div>
-        <div class="amount-display"><span id="typedAmount">0</span> Kč</div>
-        <div class="keypad">
-            <div class="key" onclick="pressNum(1)">1</div>
-            <div class="key" onclick="pressNum(2)">2</div>
-            <div class="key" onclick="pressNum(3)">3</div>
-            <div class="key" onclick="pressNum(4)">4</div>
-            <div class="key" onclick="pressNum(5)">5</div>
-            <div class="key" onclick="pressNum(6)">6</div>
-            <div class="key" onclick="pressNum(7)">7</div>
-            <div class="key" onclick="pressNum(8)">8</div>
-            <div class="key" onclick="pressNum(9)">9</div>
-            <div class="key" style="font-size:15px; border-radius:12px; background: #21262d;" onclick="pressClear()">Smazat</div>
-            <div class="key" onclick="pressNum(0)">0</div>
-            <div class="key" style="font-size:15px; border-radius:12px; background: #21262d;" onclick="pressNum('00')">00</div>
-            <div class="key btn-ok" onclick="confirmAmount()">POTVRDIT</div>
+    <!-- Background Coffee Shop Visual -->
+    <div class="fixed inset-0 z-0 opacity-20 pointer-events-none bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?q=80&w=1600&auto=format&fit=crop');"></div>
+    <div class="fixed inset-0 z-0 bg-gradient-to-b from-slate-950/80 via-slate-900/90 to-slate-950 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="relative z-10 w-full px-6 py-4 border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold">
+                <i class="fa-solid fa-credit-card"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-none tracking-tight">PayPOS Terminals</h1>
+                <span class="text-xs text-slate-400">Verifone VX-520 Emulátor v2.4</span>
+            </div>
         </div>
-    </div>
+        <div class="flex items-center space-x-4">
+            <button id="sound-toggle" class="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center space-x-2 border border-slate-700 transition">
+                <i class="fa-solid fa-volume-high text-emerald-400" id="sound-icon"></i>
+                <span id="sound-text">Zvuk zapnut</span>
+            </button>
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Online
+            </span>
+        </div>
+    </header>
 
-    <!-- 2. OBRAZOVKA: TERMINÁL ČEKAJÍCÍ NA PLATBU -->
-    <div id="terminalScreen" onclick="triggerPayment()">
-        <div id="finalAmount" class="terminal-amount">0,00 Kč</div>
-        
-        <div class="wave-container">
-            <div id="w1" class="wave"></div>
-            <div id="w2" class="wave wave2"></div>
-            <div id="w3" class="wave wave3"></div>
-            <div id="termIcon" class="wave-icon">📶</div>
+    <!-- Main Container -->
+    <main class="relative z-10 flex-1 flex flex-col lg:flex-row items-center justify-center p-4 md:p-8 gap-8 max-w-7xl mx-auto w-full">
+
+        <!-- LEFT PANEL: Merchant POS Control Panel -->
+        <div class="w-full lg:w-80 bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 backdrop-blur-md shadow-xl flex flex-col space-y-5">
+            <div class="border-b border-slate-700 pb-3">
+                <h2 class="font-semibold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-cash-register text-emerald-400"></i>
+                    Pokladní konzole
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Zadejte částku k úhradě na terminálu</p>
+            </div>
+
+            <!-- Amount Input -->
+            <div class="space-y-2">
+                <label class="text-xs text-slate-400 uppercase font-medium tracking-wider">Částka transakce (CZK)</label>
+                <div class="relative">
+                    <input type="number" id="pos-amount-input" value="650" min="1" max="999999" step="1"
+                           class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-2xl font-bold text-white focus:outline-none focus:border-emerald-500 font-mono-tech transition" />
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">Kč</span>
+                </div>
+            </div>
+
+            <!-- Preset Buttons -->
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="setAmount(85)" class="py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300 border border-slate-600/40 transition">85 Kč (Káva)</button>
+                <button onclick="setAmount(340)" class="py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300 border border-slate-600/40 transition">340 Kč (Oběd)</button>
+                <button onclick="setAmount(1250)" class="py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300 border border-slate-600/40 transition">1 250 Kč (Nákup)</button>
+            </div>
+
+            <button id="send-to-terminal-btn" onclick="initiateTransaction()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 font-bold rounded-xl shadow-lg shadow-emerald-900/30 text-white flex items-center justify-center space-x-2 transition">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Odeslat na terminál</span>
+            </button>
+
+            <div class="pt-2 border-t border-slate-700/60 space-y-2">
+                <span class="text-xs text-slate-400 block font-medium">Testovací karty / metody:</span>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="p-2 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                        <span class="text-slate-400 block">Bez PINu:</span>
+                        <strong class="text-emerald-400">Do 500 Kč</strong>
+                    </div>
+                    <div class="p-2 bg-slate-900/60 rounded-lg border border-slate-700/50">
+                        <span class="text-slate-400 block">PIN Kód:</span>
+                        <strong class="text-amber-400">1234</strong>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div id="statusLabel" class="status-text">Prosím, přiložte kartu<br>nebo mobilní zařízení</div>
+        <!-- CENTER: PHYSICAL TERMINAL HARDWARE -->
+        <div class="relative flex flex-col items-center">
 
-        <!-- Oficiální VISA vektorové logo -->
-        <div class="logos">
-            <svg class="visa-svg" viewBox="0 0 24 8" xmlns="http://w3.org">
-                <path d="M3.7 0L2.4 8H0L1.3 0h2.4zM9.4 0c-.8 0-1.5.4-1.8 1.1L5.3 8h2.5c.2-.5.5-.9.5-.9h3.1c.1.4.2.9.2.9h2.2L12 0H9.4zm.8 5.4H8.7l.8-2.1.7 2.1zM21.1 0l-2.2 5.5L17.8 1C17.6.4 17 0 16.3 0H12l-.1.4c.9.2 1.7.5 2.2.9l2 6.7h2.5L24 0h-2.9zM7.3 2.5C7 1.2 5.6.8 4.6.8H2.2L1.8 2.1c.4-.1.9-.2 1.4-.2.8 0 1.3.3 1.3.8 0 .6-.7.9-1.3 1.2C2.4 4.3 1.8 4.9 1.8 5.7c0 1.2 1.4 1.7 2.6 1.7h2.5l.4-1.3c-.5.1-1.1.2-1.6.2-.8 0-1.4-.3-1.4-.8 0-.6.7-1 1.4-1.3.8-.3 1.6-.9 1.6-1.7z"/>
-            </svg>
+            <!-- Thermal Paper Output Area (Above Terminal Slot) -->
+            <div class="relative w-72 flex flex-col items-center z-20">
+                <div id="receipt-container" class="w-64 bg-white text-slate-900 rounded-t-sm shadow-xl font-mono-tech text-[11px] p-4 pb-6 transform -translate-y-1 relative">
+                    <!-- Receipt Content Generated via JS -->
+                    <div id="receipt-content"></div>
+                    <!-- Zig-zag bottom paper tear -->
+                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-white receipt-edge"></div>
+                </div>
+            </div>
+
+            <!-- Terminal Outer Chassis -->
+            <div class="w-80 sm:w-96 bg-gradient-to-b from-slate-700 via-slate-800 to-slate-900 rounded-[40px] p-6 pos-terminal-shadow border border-slate-600/50 relative z-10">
+                
+                <!-- Terminal Top Printer Slot -->
+                <div class="w-full bg-slate-950 h-5 rounded-t-xl mb-4 border-b-2 border-slate-700 flex justify-center items-center">
+                    <div class="w-48 h-1 bg-slate-800 rounded-full"></div>
+                </div>
+
+                <!-- Brand Header & LED Indicators -->
+                <div class="flex items-center justify-between px-2 mb-3">
+                    <span class="font-display font-extrabold text-sm tracking-widest text-slate-400 uppercase">VERIFONE</span>
+                    <!-- 4 Contactless LEDs -->
+                    <div class="flex items-center space-x-2">
+                        <div id="led-1" class="w-2.5 h-2.5 rounded-full led-off transition-all"></div>
+                        <div id="led-2" class="w-2.5 h-2.5 rounded-full led-off transition-all"></div>
+                        <div id="led-3" class="w-2.5 h-2.5 rounded-full led-off transition-all"></div>
+                        <div id="led-4" class="w-2.5 h-2.5 rounded-full led-off transition-all"></div>
+                    </div>
+                </div>
+
+                <!-- LCD SCREEN DISPLAY -->
+                <div class="w-full bg-slate-950 rounded-2xl p-4 pos-screen-glass border-2 border-slate-800 relative overflow-hidden mb-6 h-48 flex flex-col justify-between">
+                    
+                    <!-- Screen Header Bar -->
+                    <div class="flex justify-between items-center text-[11px] font-mono-tech text-slate-400 border-b border-slate-800/80 pb-1.5">
+                        <span class="flex items-center gap-1">
+                            <i class="fa-solid fa-wifi text-emerald-400"></i> PAY-PAY 4G
+                        </span>
+                        <span id="screen-clock" class="text-slate-300">14:35</span>
+                    </div>
+
+                    <!-- Screen Body Dynamic Views -->
+                    <div id="screen-body" class="flex-1 flex flex-col items-center justify-center text-center py-2">
+                        <!-- Default Idle Screen Content -->
+                        <div class="space-y-1">
+                            <i class="fa-solid fa-store text-2xl text-slate-500 mb-1"></i>
+                            <p class="font-display font-bold text-slate-200 tracking-wide">PŘIPRAVEN K PLATBĚ</p>
+                            <p class="text-xs text-slate-400 font-mono-tech">Čekání na příkaz z pokladny</p>
+                        </div>
+                    </div>
+
+                    <!-- Screen Footer Bar -->
+                    <div class="flex justify-between items-center text-[10px] font-mono-tech text-slate-400 border-t border-slate-800/80 pt-1.5">
+                        <span id="screen-status-left" class="text-emerald-400">TERMINÁL OK</span>
+                        <span id="screen-status-right">MID: #849204</span>
+                    </div>
+                </div>
+
+                <!-- NFC Contactless Sensing Zone Logo -->
+                <div class="flex justify-center mb-4">
+                    <div class="flex items-center space-x-2 text-slate-500 text-xs font-mono-tech bg-slate-900/80 px-3 py-1 rounded-full border border-slate-700/50">
+                        <i class="fa-solid fa-wifi rotate-90 text-slate-400"></i>
+                        <span>BEZKONTAKTNÍ ZÓNA</span>
+                    </div>
+                </div>
+
+                <!-- PHYSICAL KEYPAD (3x4 Grid + Action Keys) -->
+                <div class="grid grid-cols-4 gap-2.5 px-1 mb-2">
+                    <!-- Row 1 -->
+                    <button onclick="pressKey('1')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">1</button>
+                    <button onclick="pressKey('2')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">2 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">ABC</span></button>
+                    <button onclick="pressKey('3')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">3 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">DEF</span></button>
+                    <button onclick="pressKey('CANCEL')" class="btn-cancel py-3.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider flex items-center justify-center">
+                        <i class="fa-solid fa-xmark text-base"></i>
+                    </button>
+
+                    <!-- Row 2 -->
+                    <button onclick="pressKey('4')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">4 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">GHI</span></button>
+                    <button onclick="pressKey('5')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">5 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">JKL</span></button>
+                    <button onclick="pressKey('6')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">6 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">MNO</span></button>
+                    <button onclick="pressKey('CLEAR')" class="btn-clear py-3.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider flex items-center justify-center">
+                        <i class="fa-solid fa-arrow-left text-base"></i>
+                    </button>
+
+                    <!-- Row 3 -->
+                    <button onclick="pressKey('7')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">7 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">PQRS</span></button>
+                    <button onclick="pressKey('8')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">8 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">TUV</span></button>
+                    <button onclick="pressKey('9')" class="btn-key py-3.5 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">9 <span class="text-[9px] block text-slate-400 -mt-1 font-sans">WXYZ</span></button>
+                    <button onclick="pressKey('ENTER')" class="btn-enter row-span-2 py-3.5 rounded-xl font-bold text-xs text-white uppercase tracking-wider flex items-center justify-center">
+                        <i class="fa-solid fa-check text-xl"></i>
+                    </button>
+
+                    <!-- Row 4 -->
+                    <button onclick="pressKey('*')" class="btn-key py-3 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">*</button>
+                    <button onclick="pressKey('0')" class="btn-key py-3 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">0</button>
+                    <button onclick="pressKey('#')" class="btn-key py-3 rounded-xl font-bold text-lg text-slate-100 font-mono-tech">#</button>
+                </div>
+            </div>
+
+            <!-- Card Reader Slot Illusion (Bottom) -->
+            <div class="w-64 h-3 bg-slate-950 rounded-b-lg border-t border-slate-800 -mt-1 z-0"></div>
         </div>
-    </div>
 
+        <!-- RIGHT PANEL: Customer Interactive Payment Cards -->
+        <div class="w-full lg:w-80 bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 backdrop-blur-md shadow-xl flex flex-col space-y-5">
+            <div class="border-b border-slate-700 pb-3">
+                <h2 class="font-semibold text-slate-200 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-emerald-400"></i>
+                    Způsob platby zákazníka
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Klikněte na kartu pro přiložení k terminálu</p>
+            </div>
+
+            <!-- Virtual Credit Cards -->
+            <div class="space-y-3">
+                <!-- Card 1: Visa Gold -->
+                <div id="card-visa" onclick="tapCard('Visa Debit', '**** **** **** 4821')" class="card-anim cursor-pointer p-4 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-yellow-600 text-white shadow-lg border border-amber-400/30 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold tracking-wider opacity-80">BANKA ČESKÁ</span>
+                        <i class="fa-solid fa-wifi rotate-90 text-lg"></i>
+                    </div>
+                    <div class="mt-4 mb-2 flex items-center space-x-2">
+                        <div class="w-8 h-6 bg-yellow-200/80 rounded flex items-center justify-center text-[9px] text-slate-800 font-bold">CHIP</div>
+                    </div>
+                    <div class="flex justify-between items-end mt-3">
+                        <span class="font-mono-tech text-sm tracking-widest">•••• 4821</span>
+                        <span class="font-bold italic text-base">VISA</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Mastercard Black -->
+                <div id="card-mc" onclick="tapCard('Mastercard World', '**** **** **** 9012')" class="card-anim cursor-pointer p-4 rounded-xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white shadow-lg border border-slate-600/50 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <span class="text-xs font-bold tracking-wider text-slate-400">PLATINUM</span>
+                        <i class="fa-solid fa-wifi rotate-90 text-lg text-emerald-400"></i>
+                    </div>
+                    <div class="mt-4 mb-2">
+                        <div class="w-8 h-6 bg-amber-300/80 rounded flex items-center justify-center text-[9px] text-slate-800 font-bold">CHIP</div>
+                    </div>
+                    <div class="flex justify-between items-end mt-3">
+                        <span class="font-mono-tech text-sm tracking-widest text-slate-300">•••• 9012</span>
+                        <div class="flex -space-x-2">
+                            <div class="w-5 h-5 rounded-full bg-red-500/90"></div>
+                            <div class="w-5 h-5 rounded-full bg-amber-500/90"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Apple Pay / Phone Simulation -->
+                <button onclick="tapCard('Apple Pay', 'Virtual Device Account')" class="w-full py-3 bg-slate-900 hover:bg-slate-950 border border-slate-700 rounded-xl text-white flex items-center justify-center space-x-3 transition shadow-md group">
+                    <i class="fa-brands fa-apple text-xl group-hover:scale-110 transition-transform"></i>
+                    <span class="font-medium text-sm">Přiložit Apple Pay / Telefon</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 py-3 text-center text-xs text-slate-500 border-t border-slate-800/60 bg-slate-950/80">
+        Simulátor platebního terminálu &bull; Web Audio API & Web Animations &bull; Všechna data jsou fiktivní
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        let currentAmount = "";
+        /* State Management */
+        let state = 'IDLE'; // States: IDLE, AWAITING_TAP, AWAITING_PIN, PROCESSING, APPROVED, DECLINED
+        let currentAmount = 650;
+        let enteredPin = '';
+        let cardDetails = null;
+        let isSoundMuted = false;
 
-        function pressNum(num) {
-            if (currentAmount === "" && (num === 0 || num === '00')) return;
-            if (currentAmount.length < 7) {
-                currentAmount += num;
-                document.getElementById("typedAmount").innerText = parseInt(currentAmount).toLocaleString('cs-CZ');
+        /* Web Audio API Synthesizer */
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
             }
         }
 
-        function pressClear() {
-            currentAmount = "";
-            document.getElementById("typedAmount").innerText = "0";
+        function playSound(type) {
+            if (isSoundMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'beep') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1200, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'tap') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1800, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'success') {
+                // Two tones for approval
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(1000, now);
+                osc.frequency.setValueAtTime(1500, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(200, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'print') {
+                // Short buzz sound for printing
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(150, now);
+                gain.gain.setValueAtTime(0.02, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
         }
 
-        function confirmAmount() {
-            if (currentAmount === "" || currentAmount === "0") return;
-            
-            document.getElementById("finalAmount").innerText = parseInt(currentAmount).toLocaleString('cs-CZ') + ",00 Kč";
-            
-            document.getElementById("setupScreen").style.display = "none";
-            document.getElementById("terminalScreen").style.display = "flex";
+        // Toggle sound
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+            isSoundMuted = !isSoundMuted;
+            document.getElementById('sound-text').textContent = isSoundMuted ? 'Zvuk vypnut' : 'Zvuk zapnut';
+            document.getElementById('sound-icon').className = isSoundMuted ? 'fa-solid fa-volume-xmark text-slate-500' : 'fa-solid fa-volume-high text-emerald-400';
+        });
+
+        // Realtime Clock on Screen
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('screen-clock').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        /* LED Lights Controller */
+        function setLEDs(pattern) {
+            // pattern array of 4 strings e.g. ['green', 'off', 'off', 'off']
+            for (let i = 1; i <= 4; i++) {
+                const led = document.getElementById(`led-${i}`);
+                const color = pattern[i - 1] || 'off';
+                led.className = `w-2.5 h-2.5 rounded-full transition-all led-${color}`;
+            }
         }
 
-        function hrajTon(frekvence, delka, casOdstartovani) {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(frekvence, audioCtx.currentTime + casOdstartovani);
-            
-            gainNode.gain.setValueAtTime(0, audioCtx.currentTime + casOdstartovani);
-            gainNode.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + casOdstartovani + 0.02);
-            gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime + casOdstartovani + delka - 0.02);
-            gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + casOdstartovani + delka);
-            
-            oscillator.start(audioCtx.currentTime + casOdstartovani);
-            oscillator.stop(audioCtx.currentTime + casOdstartovani + delka);
+        /* Preset Amounts Helper */
+        function setAmount(val) {
+            document.getElementById('pos-amount-input').value = val;
+            playSound('beep');
         }
 
-        let isPaid = false;
-        function triggerPayment() {
-            if (isPaid) return;
-            isPaid = true;
+        /* Start Transaction Flow */
+        function initiateTransaction() {
+            const inputVal = parseFloat(document.getElementById('pos-amount-input').value);
+            if (isNaN(inputVal) || inputVal <= 0) {
+                alert('Zadejte platnou částku v CZK.');
+                return;
+            }
 
-            document.getElementById("statusLabel").innerHTML = "Čtení karty...<br>Nevzdalujte kartu";
-            
-            // Reálná sekvence zvuků: Dvojité pípnutí na startu
-            hrajTon(1200, 0.05, 0);       
-            hrajTon(1200, 0.05, 0.08);    
-            
-            // Finální dlouhé schválení
+            currentAmount = inputVal;
+            enteredPin = '';
+            cardDetails = null;
+            state = 'AWAITING_TAP';
+
+            // Hide old receipt
+            document.getElementById('receipt-container').classList.remove('printing');
+
+            playSound('beep');
+            setLEDs(['amber', 'off', 'off', 'off']);
+            renderScreen();
+        }
+
+        /* Tap Card Simulation */
+        function tapCard(cardName, cardNumber) {
+            if (state !== 'AWAITING_TAP') {
+                if (state === 'IDLE') {
+                    // Auto initiate transaction if user just taps card
+                    initiateTransaction();
+                    setTimeout(() => tapCard(cardName, cardNumber), 300);
+                } me
+                return;
+            }
+
+            cardDetails = { name: cardName, number: cardNumber };
+            playSound('tap');
+
+            // LED Animation for NFC detection
+            setLEDs(['green', 'green', 'off', 'off']);
+
+            // Check if PIN is required (> 500 CZK)
+            if (currentAmount > 500) {
+                state = 'AWAITING_PIN';
+                enteredPin = '';
+                setLEDs(['green', 'green', 'amber', 'off']);
+                renderScreen();
+            } else {
+                // Direct processing for contactless without PIN
+                processPayment();
+            }
+        }
+
+        /* Keypad Action Dispatcher */
+        function pressKey(key) {
+            playSound('beep');
+
+            if (state === 'AWAITING_PIN') {
+                if (key >= '0' && key <= '9') {
+                    if (enteredPin.length < 4) {
+                        enteredPin += key;
+                        renderScreen();
+                    }
+                } else if (key === 'CLEAR') {
+                    enteredPin = enteredPin.slice(0, -1);
+                    renderScreen();
+                } else if (key === 'CANCEL') {
+                    cancelTransaction('ZRUŠENO UŽIVATELEM');
+                } else if (key === 'ENTER') {
+                    if (enteredPin.length === 4) {
+                        // Verify PIN (Default test PIN: 1234)
+                        if (enteredPin === '1234') {
+                            processPayment();
+                        } else {
+                            declineTransaction('ŠPATNÝ PIN KÓD');
+                        }
+                    } else {
+                        // Display error short
+                        const pinErr = document.getElementById('pin-subtext');
+                        if (pinErr) pinErr.textContent = 'ZADEJTE 4 MÍSTNÝ PIN';
+                    }
+                }
+            } else if (key === 'CANCEL') {
+                if (state !== 'IDLE') {
+                    cancelTransaction('TRANSAKCE ZRUŠENA');
+                }
+            }
+        }
+
+        /* Processing Payment Simulation */
+        function processPayment() {
+            state = 'PROCESSING';
+            setLEDs(['green', 'green', 'green', 'amber']);
+            renderScreen();
+
+            // Simulate Network Delay
             setTimeout(() => {
-                hrajTon(1450, 0.22, 0);   
-                
-                document.body.classList.add("success-bg");
-                document.getElementById("statusLabel").classList.add("success-text");
-                document.getElementById("statusLabel").innerHTML = "PLATBA SCHVÁLENA<br>Děkujeme";
-                document.getElementById("termIcon").innerText = "✓";
-                document.getElementById("termIcon").style.color = "#3fb950";
-                
-                document.getElementById("w1").classList.add("success-wave");
-                document.getElementById("w2").style.display = "none";
-                document.getElementById("w3").style.display = "none";
-            }, 1100); 
+                // Random outcome or success
+                approveTransaction();
+            }, 2200);
+        }
+
+        /* Approved Transaction */
+        function approveTransaction() {
+            state = 'APPROVED';
+            setLEDs(['green', 'green', 'green', 'green']);
+            playSound('success');
+            renderScreen();
+
+            // Trigger Thermal Receipt Printing
+            setTimeout(() => {
+                printReceipt();
+            }, 800);
+
+            // Auto Reset after 6 seconds
+            setTimeout(() => {
+                resetTerminal();
+            }, 7000);
+        }
+
+        /* Declined Transaction */
+        function declineTransaction(reason) {
+            state = 'DECLINED';
+            setLEDs(['red', 'red', 'red', 'red']);
+            playSound('error');
+            renderScreen(reason);
+
+            setTimeout(() => {
+                resetTerminal();
+            }, 4000);
+        }
+
+        /* Cancel Transaction */
+        function cancelTransaction(reason) {
+            state = 'DECLINED';
+            setLEDs(['red', 'off', 'off', 'off']);
+            playSound('error');
+            renderScreen(reason || 'ZRUŠENO');
+
+            setTimeout(() => {
+                resetTerminal();
+            }, 2500);
+        }
+
+        /* Reset Terminal to Idle */
+        function resetTerminal() {
+            state = 'IDLE';
+            enteredPin = '';
+            cardDetails = null;
+            setLEDs(['off', 'off', 'off', 'off']);
+            renderScreen();
+        }
+
+        /* Render Display Screen UI based on State */
+        function renderScreen(customMsg = '') {
+            const body = document.getElementById('screen-body');
+            const formattedAmount = currentAmount.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            if (state === 'IDLE') {
+                body.innerHTML = `
+                    <div class="space-y-1">
+                        <i class="fa-solid fa-store text-2xl text-slate-500 mb-1"></i>
+                        <p class="font-display font-bold text-slate-200 tracking-wide">PŘIPRAVEN K PLATBĚ</p>
+                        <p class="text-xs text-slate-400 font-mono-tech">Zadejte částku v pokladně</p>
+                    </div>
+                `;
+            } else if (state === 'AWAITING_TAP') {
+                body.innerHTML = `
+                    <div class="space-y-2">
+                        <span class="text-xs text-slate-400 block font-mono-tech">ČÁSTKA K ÚHRADĚ</span>
+                        <div class="text-2xl font-bold text-emerald-400 font-mono-tech tracking-wider">${formattedAmount} CZK</div>
+                        <div class="pt-1 flex items-center justify-center space-x-2 text-slate-300 animate-pulse">
+                            <i class="fa-solid fa-wifi rotate-90 text-sm"></i>
+                            <span class="text-xs font-semibold">PŘILOŽTE KARTU</span>
+                        </div>
+                    </div>
+                `;
+            } else if (state === 'AWAITING_PIN') {
+                let pinMask = '';
+                for (let i = 0; i < 4; i++) {
+                    pinMask += i < enteredPin.length ? '● ' : '_ ';
+                }
+                body.innerHTML = `
+                    <div class="space-y-1.5">
+                        <span class="text-[11px] text-slate-400 font-mono-tech uppercase">ZADEJTE PIN KÓD</span>
+                        <div class="text-xl font-bold text-amber-400 font-mono-tech tracking-widest my-1">${pinMask}</div>
+                        <p id="pin-subtext" class="text-[10px] text-slate-400 font-mono-tech">Potvrďte zeleným [OK]</p>
+                    </div>
+                `;
+            } else if (state === 'PROCESSING') {
+                body.innerHTML = `
+                    <div class="space-y-2">
+                        <i class="fa-solid fa-circle-notch fa-spin text-2xl text-emerald-400 mb-1"></i>
+                        <p class="font-display font-bold text-slate-200 tracking-wide text-xs">PROBÍHÁ SPOJENÍ...</p>
+                        <p class="text-[10px] text-slate-400 font-mono-tech">NEVYJÍMEJTE KARTU</p>
+                    </div>
+                `;
+            } else if (state === 'APPROVED') {
+                body.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-1">
+                            <i class="fa-solid fa-check text-lg"></i>
+                        </div>
+                        <p class="font-display font-bold text-emerald-400 tracking-wider">PLATBA SCHVÁLENA</p>
+                        <p class="text-[11px] text-slate-300 font-mono-tech">${formattedAmount} CZK</p>
+                    </div>
+                `;
+            } else if (state === 'DECLINED') {
+                body.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="w-8 h-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-1">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </div>
+                        <p class="font-display font-bold text-red-400 tracking-wider">ZAMÍTNUTO</p>
+                        <p class="text-[10px] text-slate-300 font-mono-tech">${customMsg || 'TRANSAKCE SELHALA'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        /* Thermal Receipt Generator */
+        function printReceipt() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('cs-CZ');
+            const timeStr = now.toLocaleTimeString('cs-CZ');
+            const authCode = Math.floor(100000 + Math.random() * 900000);
+            const refNum = Math.floor(100000000000 + Math.random() * 900000000000);
+            const formattedAmount = currentAmount.toLocaleString('cs-CZ', { minimumFractionDigits: 2 });
+
+            const receiptHTML = `
+                <div class="text-center border-b border-dashed border-slate-400 pb-2 mb-2">
+                    <strong class="block text-sm font-bold tracking-wider">KAVÁRNA U KOČKY s.r.o.</strong>
+                    <span>Vodičkova 12, Praha 1</span><br>
+                    <span>DIČ: CZ84920481</span>
+                </div>
+                <div class="space-y-1 mb-2">
+                    <div class="flex justify-between"><span>DATUM: ${dateStr}</span> <span>${timeStr}</span></div>
+                    <div class="flex justify-between"><span>TERMINÁL:</span> <span>#849204</span></div>
+                    <div class="flex justify-between"><span>KARTA:</span> <span>${cardDetails ? cardDetails.name : 'VISA DEBIT'}</span></div>
+                    <div class="flex justify-between"><span>ČÍSLO KARTY:</span> <span>${cardDetails ? cardDetails.number : '**** 4821'}</span></div>
+                </div>
+                <div class="border-y border-slate-900 py-1.5 my-2 font-bold flex justify-between text-xs">
+                    <span>CELKEM:</span>
+                    <span>${formattedAmount} CZK</span>
+                </div>
+                <div class="space-y-0.5 text-[10px] text-slate-700">
+                    <div class="flex justify-between"><span>AUTH KÓD:</span> <span>${authCode}</span></div>
+                    <div class="flex justify-between"><span>REF:</span> <span>${refNum}</span></div>
+                    <div class="text-center font-bold text-xs mt-2 text-slate-900 tracking-widest">--- PLATBA SCHVÁLENA ---</div>
+                </div>
+                <div class="text-center mt-3 text-[9px] text-slate-500">Děkujeme za návštěvu!</div>
+            `;
+
+            document.getElementById('receipt-content').innerHTML = receiptHTML;
+            const receiptContainer = document.getElementById('receipt-container');
+            
+            // Print sound effect simulation
+            let printBeeps = 0;
+            const printInterval = setInterval(() => {
+                playSound('print');
+                printBeeps++;
+                if (printBeeps > 12) clearInterval(printInterval);
+            }, 150);
+
+            receiptContainer.classList.add('printing');
         }
     </script>
 </body>
